@@ -1,0 +1,50 @@
+@import "tailwindcss";
+
+@theme {
+  --color-canvas: #fcfdfe;
+  --color-paper: #ffffff;
+
+  --color-ink-900: #1a1c1e;
+  --color-ink-700: rgba(26, 28, 30, 0.85);
+  --color-ink-500: rgba(26, 28, 30, 0.55);
+  --color-ink-400: rgba(26, 28, 30, 0.4);
+  --color-ink-150: rgba(82, 92, 102, 0.18);
+  --color-ink-100: rgba(26, 28, 30, 0.12);
+  --color-ink-80: rgba(26, 28, 30, 0.08);
+  --color-ink-60: rgba(26, 28, 30, 0.06);
+  --color-ink-40: rgba(26, 28, 30, 0.04);
+
+  --color-accent: #2e6de9;
+  --color-accent-100: rgba(46, 109, 233, 0.12);
+  --color-red: #ff383c;
+
+  --shadow-xs:
+    0 1px 1px rgba(0, 0, 0, 0.04), 0 3px 3px rgba(0, 0, 0, 0.04), 0 6px 4px rgba(0, 0, 0, 0.02),
+    0 0 0 1px rgba(0, 0, 0, 0.03);
+  --shadow-sr:
+    0 1px 2px rgba(0, 0, 0, 0.05), 0 4px 4px rgba(0, 0, 0, 0.04), 0 9px 5px rgba(0, 0, 0, 0.03),
+    0 0 0 1px rgba(0, 0, 0, 0.03);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-ink-900);
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@utility doc-num {
+  font-feature-settings: "tnum";
+  letter-spacing: -0.01em;
+}
+
+@utility eyebrow {
+  font-size: 11px;
+  line-height: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-ink-500);
+}

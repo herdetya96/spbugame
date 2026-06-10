@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Fuel, Heart, RotateCcw, Trophy } from "lucide-react";
 import { Motorbike3D } from "./Motorbike3D";
 
@@ -104,12 +104,6 @@ function judge(money: number, target: number): Verdict {
   };
 }
 
-function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return (
-    <div className={"bg-paper rounded-xl shadow-[var(--shadow-xs)] " + className}>{children}</div>
-  );
-}
-
 export default function App() {
   const [order, setOrder] = useState<Order>(() => randomOrder());
   const [phase, setPhase] = useState<Phase>("ready");
@@ -176,7 +170,10 @@ export default function App() {
 
   const handDelivery = () => {
     stopFilling();
-    const v = judge(Math.round(litersRef.current * PRICE_PER_LITER), order.targetMoney);
+    const v = judge(
+      Math.round(litersRef.current * PRICE_PER_LITER),
+      order.targetMoney,
+    );
     const newScore = score + v.points;
     const newLives = lives - (v.loseLife ? 1 : 0);
     setScore(newScore);
@@ -214,173 +211,176 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen px-4 md:px-8 pb-12 max-w-[1100px] mx-auto">
-      <div className="py-6 space-y-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <h1 className="text-[18px] font-semibold text-ink-900 tracking-[-0.18px]">
-              ⛽ Pom Bensin
-            </h1>
-            <p className="text-[13px] text-ink-500 mt-0.5">
-              Isi Pertamax sesuai pesanan pelanggan — {formatRupiah(PRICE_PER_LITER)}/liter
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 text-[13px] font-medium text-ink-700">
-              <Trophy className="h-4 w-4 text-accent" strokeWidth={1.5} />
-              {highscore}
-            </span>
-            <span className="flex gap-0.5">
-              {Array.from({ length: MAX_LIVES }).map((_, i) => (
-                <Heart
-                  key={i}
-                  className={"h-4 w-4 " + (i < lives ? "text-red fill-current" : "text-ink-150")}
-                  strokeWidth={1.5}
-                />
-              ))}
-            </span>
-          </div>
+    <div className="relative h-dvh overflow-hidden bg-canvas">
+      {/* Scene 3D memenuhi seluruh layar */}
+      <Motorbike3D
+        fillFrac={fillFrac}
+        targetFrac={0.75}
+        filling={holding && phase === "filling"}
+        departing={phase === "result" || phase === "gameover"}
+        bikeKey={round}
+        onFillStart={startFilling}
+        onFillStop={stopFilling}
+        className="absolute inset-0 w-full h-full"
+      />
+
+      {/* Judul + pesanan pelanggan (kiri atas) */}
+      <div className="absolute top-3 left-3 md:top-5 md:left-5 z-10 max-w-[62%] md:max-w-[40%] space-y-2.5 pointer-events-none">
+        <div className="inline-block rounded-xl bg-paper/85 backdrop-blur px-3 py-2 shadow-[var(--shadow-xs)]">
+          <h1 className="text-[15px] md:text-[17px] font-semibold text-ink-900 tracking-[-0.18px]">
+            ⛽ Pom Bensin
+          </h1>
+          <p className="text-[11px] md:text-[12px] text-ink-500">
+            Pertamax {formatRupiah(PRICE_PER_LITER)}/liter
+          </p>
         </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-3">
-          <Card className="p-5 flex flex-col items-center gap-4">
-            {/* Pesanan pelanggan */}
-            <div className="flex items-start gap-3 self-start">
-              <div className="h-10 w-10 rounded-full bg-ink-40 flex items-center justify-center text-[22px]">
-                {order.customer}
-              </div>
-              <div className="relative rounded-xl bg-accent-100 px-4 py-2.5 text-[14px] font-medium text-ink-900">
-                {phase === "gameover" ? "Yah, shift kamu selesai..." : `"${order.text}"`}
-                <span className="absolute -left-1.5 top-3.5 h-3 w-3 rotate-45 bg-accent-100" />
-              </div>
-            </div>
-
-            <div className="w-full max-w-[560px]">
-              <Motorbike3D
-                fillFrac={fillFrac}
-                targetFrac={0.75}
-                filling={holding && phase === "filling"}
-                departing={phase === "result" || phase === "gameover"}
-                bikeKey={round}
-                onFillStart={startFilling}
-                onFillStop={stopFilling}
-              />
-              <p className="mt-1.5 text-center text-[11px] text-ink-400">
-                Arahkan nozzle ke tangki lalu tahan klik untuk mengisi · geser area kosong untuk
-                memutar kamera · garis merah = batas pesanan
-              </p>
-            </div>
-
-            {/* Kontrol */}
-            {phase === "gameover" ? (
-              <div className="text-center space-y-3">
-                <div className="text-[32px]">💔</div>
-                <div className="text-[15px] font-semibold text-ink-900">Game Over</div>
-                <div className="text-[13px] text-ink-500">
-                  Skor akhir: <span className="font-semibold text-ink-900">{score}</span>
-                  {score >= highscore && score > 0 && " — rekor baru! 🎉"}
-                </div>
-                <button
-                  type="button"
-                  onClick={restart}
-                  className="inline-flex items-center gap-2 h-10 px-5 rounded-xl bg-accent text-paper text-[14px] font-semibold hover:opacity-90 active:scale-95 transition"
-                >
-                  <RotateCcw className="h-4 w-4" strokeWidth={2} />
-                  Main lagi
-                </button>
-              </div>
-            ) : phase === "result" && verdict ? (
-              <div className="text-center space-y-3">
-                <div className="text-[32px]">{verdict.emoji}</div>
-                <div className="text-[15px] font-semibold text-ink-900">
-                  {verdict.title}{" "}
-                  {verdict.points > 0 && <span className="text-accent">+{verdict.points}</span>}
-                </div>
-                <div className="text-[13px] text-ink-500 max-w-[320px]">{verdict.detail}</div>
-                <button
-                  type="button"
-                  onClick={nextCustomer}
-                  className="h-10 px-5 rounded-xl bg-accent text-paper text-[14px] font-semibold hover:opacity-90 active:scale-95 transition"
-                >
-                  Pelanggan berikutnya →
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <div className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onPointerDown={startFilling}
-                    onPointerUp={stopFilling}
-                    onPointerLeave={stopFilling}
-                    onPointerCancel={stopFilling}
-                    onContextMenu={(e) => e.preventDefault()}
-                    className="h-16 w-16 rounded-full bg-red text-paper flex items-center justify-center shadow-[var(--shadow-sr)] select-none touch-none active:scale-95 transition-transform"
-                    aria-label="Tahan untuk mengisi bensin"
-                  >
-                    <Fuel className="h-7 w-7" strokeWidth={1.75} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handDelivery}
-                    disabled={liters === 0}
-                    className="h-10 px-5 rounded-xl bg-ink-900 text-paper text-[14px] font-semibold disabled:opacity-30 hover:opacity-90 active:scale-95 transition"
-                  >
-                    Serahkan
-                  </button>
-                </div>
-                <p className="text-[12px] text-ink-400">
-                  Tahan tombol merah atau tahan klik nozzle di tangki — tap singkat untuk menambah
-                  sedikit demi sedikit
-                </p>
-              </div>
-            )}
-          </Card>
-
-          {/* Mesin pompa */}
-          <Card className="p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="eyebrow">Dispenser · Pertamax</span>
-              <span className="text-[11px] font-medium text-ink-400">Ronde {round}</span>
-            </div>
-            <div className="rounded-xl bg-ink-900 p-4 space-y-3">
-              <PumpReadout
-                label="Rupiah"
-                value={money.toLocaleString("id-ID")}
-                accentClass="text-[#5eead4]"
-              />
-              <PumpReadout
-                label="Liter"
-                value={liters.toFixed(3).replace(".", ",")}
-                accentClass="text-[#fbbf24]"
-              />
-              <PumpReadout
-                label="Harga/Liter"
-                value={PRICE_PER_LITER.toLocaleString("id-ID")}
-                accentClass="text-paper/70"
-                small
-              />
-            </div>
-            <div className="space-y-1.5">
-              <div className="flex justify-between text-[13px]">
-                <span className="text-ink-500">Pesanan</span>
-                <span className="font-semibold text-ink-900">
-                  {formatRupiah(order.targetMoney)}
-                </span>
-              </div>
-              <div className="flex justify-between text-[13px]">
-                <span className="text-ink-500">Skor</span>
-                <span className="font-semibold text-accent">{score}</span>
-              </div>
-            </div>
-            <div className="rounded-xl bg-ink-40 p-3 text-[12px] leading-relaxed text-ink-500">
-              <span className="font-semibold text-ink-700">Aturan:</span> berhenti sedekat mungkin
-              dengan pesanan. Pas (±Rp 100) = 100 poin. Kelebihan Rp 100 atau kurang lebih dari Rp
-              1.500 = kehilangan 1 nyawa.
-            </div>
-          </Card>
+        <div className="flex items-start gap-2">
+          <div className="h-9 w-9 shrink-0 rounded-full bg-paper/90 backdrop-blur flex items-center justify-center text-[20px] shadow-[var(--shadow-xs)]">
+            {order.customer}
+          </div>
+          <div className="relative rounded-xl bg-paper/90 backdrop-blur px-3 py-2 text-[13px] md:text-[14px] font-medium text-ink-900 shadow-[var(--shadow-xs)]">
+            {phase === "gameover"
+              ? "Yah, shift kamu selesai..."
+              : `"${order.text}"`}
+          </div>
         </div>
       </div>
+
+      {/* Nyawa, rekor & meteran dispenser (kanan atas) */}
+      <div className="absolute top-3 right-3 md:top-5 md:right-5 z-10 flex flex-col items-end gap-2">
+        <div className="flex items-center gap-3 rounded-full bg-paper/85 backdrop-blur px-3 py-1.5 shadow-[var(--shadow-xs)]">
+          <span className="inline-flex items-center gap-1 text-[13px] font-medium text-ink-700">
+            <Trophy className="h-4 w-4 text-accent" strokeWidth={1.5} />
+            {highscore}
+          </span>
+          <span className="flex gap-0.5">
+            {Array.from({ length: MAX_LIVES }).map((_, i) => (
+              <Heart
+                key={i}
+                className={
+                  "h-4 w-4 " +
+                  (i < lives ? "text-red fill-current" : "text-ink-150")
+                }
+                strokeWidth={1.5}
+              />
+            ))}
+          </span>
+        </div>
+        <div className="w-[176px] md:w-[200px] rounded-xl bg-ink-900/90 backdrop-blur p-3 space-y-2 shadow-[var(--shadow-sr)]">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-wider text-paper/50 font-semibold">
+              Pertamax
+            </span>
+            <span className="text-[10px] font-medium text-paper/40">
+              Ronde {round}
+            </span>
+          </div>
+          <PumpReadout
+            label="Rupiah"
+            value={money.toLocaleString("id-ID")}
+            accentClass="text-[#5eead4]"
+          />
+          <PumpReadout
+            label="Liter"
+            value={liters.toFixed(3).replace(".", ",")}
+            accentClass="text-[#fbbf24]"
+          />
+          <div className="border-t border-paper/10 pt-2 space-y-1">
+            <div className="flex justify-between text-[11px]">
+              <span className="text-paper/50">Pesanan</span>
+              <span className="font-semibold text-paper">
+                {formatRupiah(order.targetMoney)}
+              </span>
+            </div>
+            <div className="flex justify-between text-[11px]">
+              <span className="text-paper/50">Skor</span>
+              <span className="font-semibold text-[#5eead4]">{score}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Kontrol pengisian (bawah tengah) */}
+      {(phase === "ready" || phase === "filling") && (
+        <div className="absolute bottom-4 md:bottom-6 inset-x-0 z-10 flex flex-col items-center gap-2 px-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onPointerDown={startFilling}
+              onPointerUp={stopFilling}
+              onPointerLeave={stopFilling}
+              onPointerCancel={stopFilling}
+              onContextMenu={(e) => e.preventDefault()}
+              className="h-16 w-16 rounded-full bg-red text-paper flex items-center justify-center shadow-[var(--shadow-sr)] select-none touch-none active:scale-95 transition-transform"
+              aria-label="Tahan untuk mengisi bensin"
+            >
+              <Fuel className="h-7 w-7" strokeWidth={1.75} />
+            </button>
+            <button
+              type="button"
+              onClick={handDelivery}
+              disabled={liters === 0}
+              className="h-11 px-5 rounded-xl bg-ink-900/90 backdrop-blur text-paper text-[14px] font-semibold disabled:opacity-40 hover:opacity-90 active:scale-95 transition shadow-[var(--shadow-sr)]"
+            >
+              Serahkan
+            </button>
+          </div>
+          <p className="text-[11px] text-ink-500 text-center max-w-[420px] bg-paper/70 backdrop-blur rounded-full px-3 py-1">
+            Tahan tombol merah atau tahan klik nozzle di tangki · geser area
+            kosong untuk memutar
+          </p>
+        </div>
+      )}
+
+      {/* Hasil ronde / game over (kartu di tengah) */}
+      {phase === "result" && verdict && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-ink-900/15 backdrop-blur-[2px] px-4">
+          <div className="bg-paper rounded-2xl shadow-[var(--shadow-sr)] p-6 text-center space-y-3 max-w-[340px] w-full">
+            <div className="text-[36px]">{verdict.emoji}</div>
+            <div className="text-[16px] font-semibold text-ink-900">
+              {verdict.title}{" "}
+              {verdict.points > 0 && (
+                <span className="text-accent">+{verdict.points}</span>
+              )}
+            </div>
+            <div className="text-[13px] text-ink-500">{verdict.detail}</div>
+            <button
+              type="button"
+              onClick={nextCustomer}
+              className="h-11 px-5 rounded-xl bg-accent text-paper text-[14px] font-semibold hover:opacity-90 active:scale-95 transition"
+            >
+              Pelanggan berikutnya →
+            </button>
+          </div>
+        </div>
+      )}
+      {phase === "gameover" && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center bg-ink-900/15 backdrop-blur-[2px] px-4">
+          <div className="bg-paper rounded-2xl shadow-[var(--shadow-sr)] p-6 text-center space-y-3 max-w-[340px] w-full">
+            <div className="text-[36px]">💔</div>
+            <div className="text-[16px] font-semibold text-ink-900">
+              Game Over
+            </div>
+            <div className="text-[13px] text-ink-500">
+              Skor akhir:{" "}
+              <span className="font-semibold text-ink-900">{score}</span>
+              {score >= highscore && score > 0 && " — rekor baru! 🎉"}
+            </div>
+            <div className="text-[12px] text-ink-400">
+              Pas (±Rp 100) = 100 poin. Kelebihan atau kurang &gt; Rp 1.500 = -1
+              nyawa.
+            </div>
+            <button
+              type="button"
+              onClick={restart}
+              className="inline-flex items-center gap-2 h-11 px-5 rounded-xl bg-accent text-paper text-[14px] font-semibold hover:opacity-90 active:scale-95 transition"
+            >
+              <RotateCcw className="h-4 w-4" strokeWidth={2} />
+              Main lagi
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -398,7 +398,9 @@ function PumpReadout({
 }) {
   return (
     <div className="flex items-baseline justify-between gap-3">
-      <span className="text-[11px] uppercase tracking-wider text-paper/50">{label}</span>
+      <span className="text-[11px] uppercase tracking-wider text-paper/50">
+        {label}
+      </span>
       <span
         className={
           "doc-num font-bold tabular-nums " +

@@ -23,6 +23,7 @@ export function Motorbike3D({
   bikeKey,
   onFillStart,
   onFillStop,
+  className = "w-full h-[280px] md:h-[340px] rounded-xl",
 }: {
   fillFrac: number;
   targetFrac: number;
@@ -33,11 +34,18 @@ export function Motorbike3D({
   bikeKey: number;
   onFillStart: () => void;
   onFillStop: () => void;
+  /** ukuran container canvas — default kecil, kirim "w-full h-full" untuk scene penuh */
+  className?: string;
 }) {
   const [overTank, setOverTank] = useState(false);
 
   return (
-    <div className="w-full h-[280px] md:h-[340px] rounded-xl overflow-hidden cursor-none bg-gradient-to-b from-[#dce9fb] via-[#e8f0fb] to-[#cfdcf0]">
+    <div
+      className={
+        "overflow-hidden cursor-none bg-gradient-to-b from-[#dce9fb] via-[#e8f0fb] to-[#cfdcf0] " +
+        className
+      }
+    >
       <Canvas
         shadows
         gl={{ localClippingEnabled: true }}
